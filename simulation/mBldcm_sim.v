@@ -26,7 +26,13 @@ module mBldcm_sim();
 
 	// test target
 	mBldcm #(
-		.pFreqClock(32'd50000000)
+		.pFreqClock(32'd50000000),
+		.pInvertUh(0),
+		.pInvertUl(1),
+		.pInvertVh(0),
+		.pInvertVl(1),
+		.pInvertWh(0),
+		.pInvertWl(1)
 	) uBldcm (
 		.iClock(rClock),
 		.iReset_n(rReset_n),
@@ -101,19 +107,21 @@ module mBldcm_sim();
 		rRead  <= 1'b0;
 		rAddr  <= 2'h0;
 		#200
-		// Access error injection (Read)
+		// Write enable
+		rWrite <= 1'b1;
+		rAddr  <= 2'h2;
+		rWdata <= 32'h1;
+		#20
+		rWrite <= 1'b0;
+		rAddr  <= 2'h0;
+		rWdata <= 32'h0;
+		#200
+		// Read enable
 		rRead <= 1'b1;
 		rAddr <= 2'h2;
 		#20
 		rRead <= 1'b0;
 		rAddr <= 2'h0;
-		#200
-		// Access error injection (Wead)
-		rWrite <= 1'b1;
-		rAddr  <= 2'h2;
-		#20
-		rWrite <= 1'b0;
-		rAddr  <= 2'h0;
 	end
 
 endmodule

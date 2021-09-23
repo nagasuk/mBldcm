@@ -1,4 +1,6 @@
 simulation/*
+*~
+.~lock.*
 
 !simulation/*.v
 !simulation/*.mpf

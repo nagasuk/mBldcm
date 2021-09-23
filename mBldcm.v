@@ -8,7 +8,13 @@
 `default_nettype none
 
 module mBldcm #(
-	parameter [31:0] pFreqClock = 32'd50000000
+	parameter [31:0] pFreqClock = 32'd50000000,
+	parameter [0:0]  pInvertUh = 1'b0,
+	parameter [0:0]  pInvertUl = 1'b0,
+	parameter [0:0]  pInvertVh = 1'b0,
+	parameter [0:0]  pInvertVl = 1'b0,
+	parameter [0:0]  pInvertWh = 1'b0,
+	parameter [0:0]  pInvertWl = 1'b0
 ) (
 	// Common
 	input  wire iClock,
@@ -38,6 +44,7 @@ module mBldcm #(
 	wire        wFreqReflected;
 	wire [31:0] wFreqTarget;
 	wire        wLatchFreqTarget;
+	wire        wEnable;
 	wire [31:0] wDiv;
 	wire        wStop;
 	wire [3:0]  wPhase;
@@ -54,6 +61,7 @@ module mBldcm #(
 		.iWrite(iWrite),
 		.iWdata(iWdata),
 		.oResp(oResp),
+		.oEnable(wEnable),
 		.iFreqReflected(wFreqReflected),
 		.iStop(wStop),
 		.ioFreqTarget(wFreqTarget),
@@ -79,10 +87,17 @@ module mBldcm #(
 
 	// Generate Drive Signal
 	mBldcm_Core #(
-		.pTotalPhaseStages(pTotalPhaseStages)
+		.pTotalPhaseStages(pTotalPhaseStages),
+		.pInvertUh(pInvertUh),
+		.pInvertUl(pInvertUl),
+		.pInvertVh(pInvertVh),
+		.pInvertVl(pInvertVl),
+		.pInvertWh(pInvertWh),
+		.pInvertWl(pInvertWl)
 	) uBldcm_Core (
 		.iClock(iClock),
 		.iReset_n(iReset_n),
+		.iEnable(wEnable),
 		.iDiv(wDiv),
 		.iStop(wStop),
 		.iPhaseUpdate(wPhaseUpdate),
