@@ -8,7 +8,7 @@
 `default_nettype none
 
 module mBldcm_Core #(
-	parameter [3:0] pTotalPhaseStages = 4'd12,
+	parameter [2:0] pTotalPhaseStages = 3'd6,
 	parameter [0:0] pInvertUh = 1'b0,
 	parameter [0:0] pInvertUl = 1'b0,
 	parameter [0:0] pInvertVh = 1'b0,
@@ -24,11 +24,11 @@ module mBldcm_Core #(
 	input  wire        iEnable,
 	input  wire [31:0] iDiv,
 	input  wire        iStop,
-	input  wire [3:0]  iPhaseUpdate,
+	input  wire [2:0]  iPhaseUpdate,
 	input  wire        iLatchPhaseUpdate,
 
 	// Output signals to monitor
-	output wire [3:0] oPhase,
+	output wire [2:0] oPhase,
 
 	// Signal to control motor
 	output wire oUh,
@@ -40,7 +40,7 @@ module mBldcm_Core #(
 );
 
 	// Wires
-	wire [3:0]  wPhase;
+	wire [2:0]  wPhase;
 	wire        wUhTmp;
 	wire        wUlTmp;
 	wire        wVhTmp;
@@ -65,42 +65,48 @@ module mBldcm_Core #(
 
 	// Generate Pulse
 	mBldcm_Pulser #(
-		.pPhaseDiff(4'd0)
+		.pPhaseDiff(3'd0),
+		.pTotalPhaseStages(pTotalPhaseStages)
 	) uBldcm_Pulser_Uh (
 		.iPhase(wPhase),
 		.oPulse(wUhTmp)
 	);
 
 	mBldcm_Pulser #(
-		.pPhaseDiff(4'd2)
+		.pPhaseDiff(3'd2),
+		.pTotalPhaseStages(pTotalPhaseStages)
 	) uBldcm_Pulser_Vh (
 		.iPhase(wPhase),
 		.oPulse(wVhTmp)
 	);
 
 	mBldcm_Pulser #(
-		.pPhaseDiff(4'd4)
+		.pPhaseDiff(3'd4),
+		.pTotalPhaseStages(pTotalPhaseStages)
 	) uBldcm_Pulser_Wh (
 		.iPhase(wPhase),
 		.oPulse(wWhTmp)
 	);
 
 	mBldcm_Pulser #(
-		.pPhaseDiff(4'd3)
+		.pPhaseDiff(3'd3),
+		.pTotalPhaseStages(pTotalPhaseStages)
 	) uBldcm_Pulser_Ul (
 		.iPhase(wPhase),
 		.oPulse(wUlTmp)
 	);
 
 	mBldcm_Pulser #(
-		.pPhaseDiff(4'd5)
+		.pPhaseDiff(3'd5),
+		.pTotalPhaseStages(pTotalPhaseStages)
 	) uBldcm_Pulser_Vl (
 		.iPhase(wPhase),
 		.oPulse(wVlTmp)
 	);
 
 	mBldcm_Pulser #(
-		.pPhaseDiff(4'd1)
+		.pPhaseDiff(3'd1),
+		.pTotalPhaseStages(pTotalPhaseStages)
 	) uBldcm_Pulser_Wl (
 		.iPhase(wPhase),
 		.oPulse(wWlTmp)

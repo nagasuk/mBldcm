@@ -7,7 +7,7 @@
 
 module mBldcm_Freq2Div #(
 	parameter [31:0] pFreqClock        = 32'd50000000,
-	parameter [3:0]  pTotalPhaseStages = 4'd12
+	parameter [2:0]  pTotalPhaseStages = 3'd6
 ) (
 	input  wire        iClock,
 	input  wire        iReset_n,
@@ -105,18 +105,6 @@ module mBldcm_Freq2Div #(
 		.oQuotient(wDivTmp[pWidthUsedByUDiv-1:0]),
 		.oRemain()
 	);
-
-	/*
-	alt_udiv_32_32 alt_udiv_32_32_inst(
-		.aclr(~iReset_n),
-		.clken(1'b1),
-		.clock(iClock),
-		.denom(rFreqTarget),
-		.numer(pFreqClock / pTotalPhaseStages),
-		.quotient(wDivTmp),
-		.remain()
-	);
-	*/
 
 endmodule
 

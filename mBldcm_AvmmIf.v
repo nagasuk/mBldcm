@@ -22,8 +22,8 @@ module mBldcm_AvmmIf (
 	output wire        oLatchFreqTarget,
 
 	// [Phase (in/out)]
-	input  wire [3:0]  iPhase,
-	output wire [3:0]  oPhaseUpdate,
+	input  wire [2:0]  iPhase,
+	output wire [2:0]  oPhaseUpdate,
 	output wire        oLatchPhaseUpdate,
 
 	// [Control (out)]
@@ -75,7 +75,7 @@ module mBldcm_AvmmIf (
 	// Read control
 	// [Main]
 	assign oRdata =  (iAddr == pAddrFreqTarget) ? ioFreqTarget         :
-	                ((iAddr == pAddrPhase)      ? {28'h000000, iPhase} :
+	                ((iAddr == pAddrPhase)      ? {29'h000000, iPhase} :
 	                ((iAddr == pAddrControl)    ? rControl             :
 			((iAddr == pAddrStatus)     ? wStatus              : 32'hFFFFFFFF)));
 	// [Sub: Status]

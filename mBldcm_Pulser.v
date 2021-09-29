@@ -4,35 +4,40 @@
 `default_nettype none
 
 module mBldcm_Pulser #(
-	parameter [3:0] pPhaseDiff = 4'd0
+	parameter [2:0] pPhaseDiff = 3'd0,
+	parameter [2:0] pTotalPhaseStages = 3'd6
 ) (
-	input  wire [3:0] iPhase,
+	input  wire [2:0] iPhase,
 	output wire       oPulse
 );
-	// Parameters
-	localparam [3:0] pTotalPhaseStages = 4'd12;
+	generate
+		if ((pPhaseDiff + 3'd1) < pTotalPhaseStages) begin
+			assign oPulse = fPhase2Pulse(iPhase);
 
-	// Wires
-	wire [3:0] wLocalPhase;
+			function fPhase2Pulse(
+				input [2:0] phase
+			);
+				case (phase)
+					pPhaseDiff       : fPhase2Pulse = 1'b1;
+					pPhaseDiff + 3'd1: fPhase2Pulse = 1'b1;
+					default          : fPhase2Pulse = 1'b0;
+				endcase
+			endfunction
 
-	// Body
-	assign wLocalPhase = (iPhase < pPhaseDiff) ?
-	                     (pTotalPhaseStages - pPhaseDiff + iPhase) :
-	                     (iPhase - pPhaseDiff);
-	assign oPulse = fPhase2Pulse(wLocalPhase);
+		end else begin
+			assign oPulse = fPhase2Pulse(iPhase);
 
-	// Functions
-	function fPhase2Pulse (
-		input [3:0] phase
-	);
-		case (phase)
-			4'd0   : fPhase2Pulse = 1'b1;
-			4'd1   : fPhase2Pulse = 1'b1;
-			4'd6   : fPhase2Pulse = 1'b1;
-			4'd7   : fPhase2Pulse = 1'b1;
-			default: fPhase2Pulse = 1'b0;
-		endcase
-	endfunction
+			function fPhase2Pulse(
+				input [2:0] phase
+			);
+				case (phase)
+					pPhaseDiff       : fPhase2Pulse = 1'b1;
+					3'd0             : fPhase2Pulse = 1'b1;
+					default          : fPhase2Pulse = 1'b0;
+				endcase
+			endfunction
+		end
+	endgenerate
 
 endmodule
 

@@ -38,7 +38,7 @@ module mBldcm #(
 );
 
 	//Parameters
-	localparam [3:0] pTotalPhaseStages = 4'd12;
+	localparam [2:0] pTotalPhaseStages = 3'd6;
 
 	// Wire
 	wire        wFreqReflected;
@@ -47,8 +47,8 @@ module mBldcm #(
 	wire        wEnable;
 	wire [31:0] wDiv;
 	wire        wStop;
-	wire [3:0]  wPhase;
-	wire [3:0]  wPhaseUpdate;
+	wire [2:0]  wPhase;
+	wire [2:0]  wPhaseUpdate;
 	wire        wLatchPhaseUpdate;
 
 	// Avalon-MM I/F
