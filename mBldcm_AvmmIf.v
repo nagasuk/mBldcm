@@ -21,13 +21,19 @@ module mBldcm_AvmmIf (
 	inout  wire [31:0] ioFreqTarget,
 	output wire        oLatchFreqTarget,
 
-	// [Phase (in/out)]
+	// [PWM Compare (out)]
+	output reg  [16:0] oPwmCmp,
+
+	// [Control (in/out)]
+	// [Sub: Phase (in/out)]
 	input  wire [2:0]  iPhase,
 	output wire [2:0]  oPhaseUpdate,
 	output wire        oLatchPhaseUpdate,
-
-	// [Control (out)]
-	output wire        oEnable,
+	// [Sub: Enable (out)]
+	output reg         oEnable,
+	// [Sub: PWM (out)]
+	output reg  [5:0]  oPwmPrsc,
+	output reg  [15:0] oPwmMaxCnt,
 
 	// [Status (in)]
 	input  wire        iFreqReflected,
@@ -37,7 +43,7 @@ module mBldcm_AvmmIf (
 	// Parameters
 	// [Address]
 	localparam [1:0] pAddrFreqTarget = 2'h0;
-	localparam [1:0] pAddrPhase      = 2'h1;
+	localparam [1:0] pAddrPwmCmp     = 2'h1;
 	localparam [1:0] pAddrControl    = 2'h2;
 	localparam [1:0] pAddrStatus     = 2'h3;
 	// [Responce]
@@ -46,16 +52,31 @@ module mBldcm_AvmmIf (
 	localparam [1:0] pRespSlaveError  = 2'b10;
 	localparam [1:0] pRespDecodeError = 2'b11;
 
-	// [For rControl]
-	localparam [31:0] pControlRegResetVal = 31'h00000000;
-	localparam [31:0] pControlRegMask     = 31'h00000001;
+	// [For PwmCmp Register]
+	localparam [16:0] pPwmCmpRegResetVal = 17'h00000;
+	localparam        pPwmCmpRegBitPos   = 0;
+	localparam        pPwmCmpRegMsb      = 16;
+
+	// [For Control Register]
+	localparam [0:0]  pEnableRegResetVal    = 1'b0;
+	localparam        pEnableBitPos         = 0;
+	localparam        pPhaseRegBitPos       = 2;
+	localparam        pPhaseRegMsb          = 4;
+	localparam        pWPhaseFlgBitPos      = 5;
+	localparam [5:0]  pPwmPrscRegResetVal   = 6'h00;
+	localparam        pPwmPrscRegBitPos     = 6;
+	localparam        pPwmPrscRegMsb        = 11;
+	localparam [15:0] pPwmMaxCntRegResetVal = 16'hFFFF;
+	localparam        pPwmMaxCntRegBitPos   = 12;
+	localparam        pPwmMaxCntRegMsb      = 27;
 
 	// Wires
+	wire        wLatchPwmCmpReg;
 	wire [31:0] wStatus;
-	wire wLatchControlReg;
+	wire        wLatchControlReg;
+	wire [31:0] wControl;
 
 	// Registers
-	reg  [31:0] rControl;
 
 	// Responce
 	assign oResp =  fResp(iAddr);
@@ -65,7 +86,7 @@ module mBldcm_AvmmIf (
 	);
 		case (iAddr)
 			pAddrFreqTarget: fResp = pRespOkey;
-			pAddrPhase     : fResp = pRespOkey;
+			pAddrPwmCmp    : fResp = pRespOkey;
 			pAddrControl   : fResp = pRespOkey;
 			pAddrStatus    : fResp = pRespOkey;
 			default        : fResp = pRespDecodeError;
@@ -74,10 +95,12 @@ module mBldcm_AvmmIf (
 	
 	// Read control
 	// [Main]
-	assign oRdata =  (iAddr == pAddrFreqTarget) ? ioFreqTarget         :
-	                ((iAddr == pAddrPhase)      ? {29'h000000, iPhase} :
-	                ((iAddr == pAddrControl)    ? rControl             :
-			((iAddr == pAddrStatus)     ? wStatus              : 32'hFFFFFFFF)));
+	assign oRdata =  (iAddr == pAddrFreqTarget) ? ioFreqTarget        :
+	                ((iAddr == pAddrPwmCmp)     ? {15'h0000, oPwmCmp} :
+	                ((iAddr == pAddrControl)    ? wControl            :
+			((iAddr == pAddrStatus)     ? wStatus             : 32'hFFFFFFFF)));
+	// [Sub: Control]
+	assign wControl = {4'h00, oPwmMaxCnt, oPwmPrsc, 1'b0, iPhase, 1'b0, oEnable};
 	// [Sub: Status]
 	assign wStatus = {30'h00000000, iFreqReflected, iStop};
 
@@ -86,23 +109,42 @@ module mBldcm_AvmmIf (
 	assign oLatchFreqTarget = iWrite & ((iAddr == pAddrFreqTarget) ? 1'b1 : 1'b0);
 	assign ioFreqTarget     = (oLatchFreqTarget == 1'b1) ? iWdata : 32'hZZZZZZZZ;
 
-	// [Phase]
-	assign oLatchPhaseUpdate = iWrite & ((iAddr == pAddrPhase) ? 1'b1 : 1'b0);
-	assign oPhaseUpdate      = iWdata;
+	// [PWM Compare]
+	assign wLatchPwmCmpReg = iWrite & ((iAddr == pAddrPwmCmp) ? 1'b1 : 1'b0);
 
-	// [Control]
-	assign wLatchControlReg = iWrite & ((iAddr == pAddrControl) ? 1'b1 : 1'b0);
-	always @(posedge iClock) begin : ControlRegister
+	always @(posedge iClock) begin : PwmCmpRegister
 		if (iReset_n == 1'b0) begin
-			rControl <= pControlRegResetVal;
-		end else if (wLatchControlReg == 1'b1) begin
-			rControl <= pControlRegMask & iWdata;
+			oPwmCmp <= pPwmCmpRegResetVal;
+		end else if (wLatchPwmCmpReg == 1'b1) begin
+			oPwmCmp <= iWdata[pPwmCmpRegMsb:pPwmCmpRegBitPos];
 		end else begin
-			rControl <= rControl;
+			oPwmCmp <= oPwmCmp;
 		end
 	end
 
-	assign oEnable = rControl[0]; // Distribute control signals
+	// [Control]
+	// [Sub: Phase]
+	assign oLatchPhaseUpdate = wLatchControlReg & iWdata[pWPhaseFlgBitPos];
+	assign oPhaseUpdate      = iWdata[pPhaseRegMsb:pPhaseRegBitPos];
+
+	// [Sub: Others]
+	assign wLatchControlReg = iWrite & ((iAddr == pAddrControl) ? 1'b1 : 1'b0);
+
+	always @(posedge iClock) begin : ControlRegister
+		if (iReset_n == 1'b0) begin
+			oEnable    <= pEnableRegResetVal;
+			oPwmPrsc   <= pPwmPrscRegResetVal;
+			oPwmMaxCnt <= pPwmMaxCntRegResetVal;
+		end else if (wLatchControlReg == 1'b1) begin
+			oEnable    <= iWdata[pEnableBitPos];
+			oPwmPrsc   <= iWdata[pPwmPrscRegMsb:pPwmPrscRegBitPos];
+			oPwmMaxCnt <= iWdata[pPwmMaxCntRegMsb:pPwmMaxCntRegBitPos];
+		end else begin
+			oEnable    <= oEnable;
+			oPwmPrsc   <= oPwmPrsc;
+			oPwmMaxCnt <= oPwmMaxCnt;
+		end
+	end
 
 endmodule
 

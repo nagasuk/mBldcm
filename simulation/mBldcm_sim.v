@@ -27,6 +27,7 @@ module mBldcm_sim();
 	// test target
 	mBldcm #(
 		.pFreqClock(32'd50000000),
+		.pPwmDeadTimeClockCycle(5),
 		.pInvertUh(0),
 		.pInvertUl(1),
 		.pInvertVh(0),
@@ -76,10 +77,50 @@ module mBldcm_sim();
 		rRead  <= 1'b0;
 		rAddr  <= 2'h0;
 		#200
+		// Read control (Check phase value)
+		rRead <= 1'b1;
+		rAddr <= 2'h2;
+		#20
+		rRead <= 1'b0;
+		rAddr <= 2'h0;
+		#200
+		// Write phase settings w/o W_PHASE and set enable
+		rWrite <= 1'b1;
+		rAddr  <= 2'h2;
+		rWdata <= {4'h000, 16'hFFFF, 6'h00, 1'b0, 3'h3, 1'b0, 1'b1};
+		#20
+		rWrite <= 1'b0;
+		rAddr  <= 2'h0;
+		rWdata <= 32'h0;
+		#200
+		// Read control (Check phase value)
+		rRead <= 1'b1;
+		rAddr <= 2'h2;
+		#20
+		rRead <= 1'b0;
+		rAddr <= 2'h0;
+		#200
+		// Write phase settings w/ W_PHASE
+		rWrite <= 1'b1;
+		rAddr  <= 2'h2;
+		rWdata <= {4'h000, 16'hFFFF, 6'h00, 1'b1, 3'h3, 1'b0, 1'b1};
+		#20
+		rWrite <= 1'b0;
+		rAddr  <= 2'h0;
+		rWdata <= 32'h0;
+		#200
+		// Read control (Check phase value)
+		rRead <= 1'b1;
+		rAddr <= 2'h2;
+		#20
+		rRead <= 1'b0;
+		rAddr <= 2'h0;
+		#200
 		// Write freq
 		rWrite <= 1'b1;
 		rAddr  <= 2'b0;
-		rWdata <= 32'd2083333;
+		rWdata <= 32'd3472;
+		//rWdata <= 32'd2083333;
 		//rWdata <= 32'd1;
 		#20
 		rWrite <= 1'b0;
@@ -107,10 +148,19 @@ module mBldcm_sim();
 		rRead  <= 1'b0;
 		rAddr  <= 2'h0;
 		#200
+		// Write PWM settings and reset enable
+		rWrite <= 1'b1;
+		rAddr  <= 2'h2;
+		rWdata <= {4'h000, 16'h000F, 6'h03, 1'b0, 3'h0, 1'b0, 1'b0};
+		#20
+		rWrite <= 1'b0;
+		rAddr  <= 2'h0;
+		rWdata <= 32'h0;
+		#200
 		// Write enable
 		rWrite <= 1'b1;
 		rAddr  <= 2'h2;
-		rWdata <= 32'h1;
+		rWdata <= {4'h000, 16'h000F, 6'h03, 1'b0, 3'h0, 1'b0, 1'b1};
 		#20
 		rWrite <= 1'b0;
 		rAddr  <= 2'h0;
@@ -122,6 +172,24 @@ module mBldcm_sim();
 		#20
 		rRead <= 1'b0;
 		rAddr <= 2'h0;
+		#200
+		// Write PWM compare
+		rWrite <= 1'b1;
+		rAddr  <= 2'h1;
+		rWdata <= 32'h0000000C;
+		#20
+		rWrite <= 1'b0;
+		rAddr  <= 2'h0;
+		rWdata <= 32'h0;
+		#10000
+		// Update PWM compare
+		rWrite <= 1'b1;
+		rAddr  <= 2'h1;
+		rWdata <= 32'h00000003;
+		#20
+		rWrite <= 1'b0;
+		rAddr  <= 2'h0;
+		rWdata <= 32'h0;
 	end
 
 endmodule

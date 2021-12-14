@@ -9,6 +9,7 @@
 
 module mBldcm #(
 	parameter [31:0] pFreqClock = 32'd50000000,
+	parameter        pPwmDeadTimeClockCycle = 10,
 	parameter [0:0]  pInvertUh = 1'b0,
 	parameter [0:0]  pInvertUl = 1'b0,
 	parameter [0:0]  pInvertVh = 1'b0,
@@ -39,6 +40,8 @@ module mBldcm #(
 
 	//Parameters
 	localparam [2:0] pTotalPhaseStages = 3'd6;
+	localparam       pPwmCounterWidth  = 16;
+	localparam       pPwmNumPrescaler  = 32;
 
 	// Wire
 	wire        wFreqReflected;
@@ -50,6 +53,9 @@ module mBldcm #(
 	wire [2:0]  wPhase;
 	wire [2:0]  wPhaseUpdate;
 	wire        wLatchPhaseUpdate;
+	wire [17:0] wPwmCmp;
+	wire [16:0] wPwmMaxCnt;
+	wire [6:0]  wPwmPrsc;
 
 	// Avalon-MM I/F
 	mBldcm_AvmmIf uBldcm_AvmmIf (
@@ -68,7 +74,10 @@ module mBldcm #(
 		.oLatchFreqTarget(wLatchFreqTarget),
 		.iPhase(wPhase),
 		.oPhaseUpdate(wPhaseUpdate),
-		.oLatchPhaseUpdate(wLatchPhaseUpdate)
+		.oLatchPhaseUpdate(wLatchPhaseUpdate),
+		.oPwmCmp(wPwmCmp),
+		.oPwmPrsc(wPwmPrsc),
+		.oPwmMaxCnt(wPwmMaxCnt)
 	);
 
 	// Frequency to Divider num Convertor
@@ -88,6 +97,9 @@ module mBldcm #(
 	// Generate Drive Signal
 	mBldcm_Core #(
 		.pTotalPhaseStages(pTotalPhaseStages),
+		.pPwmCounterWidth(pPwmCounterWidth),
+		.pPwmNumPrescaler(pPwmNumPrescaler),
+		.pPwmDeadTimeClockCycle(pPwmDeadTimeClockCycle),
 		.pInvertUh(pInvertUh),
 		.pInvertUl(pInvertUl),
 		.pInvertVh(pInvertVh),
@@ -102,6 +114,9 @@ module mBldcm #(
 		.iStop(wStop),
 		.iPhaseUpdate(wPhaseUpdate),
 		.iLatchPhaseUpdate(wLatchPhaseUpdate),
+		.iPwmCtrlMaxCnt(wPwmMaxCnt),
+		.iPwmCtrlCmpCnt(wPwmCmp),
+		.iPwmCtrlPrscSel(wPwmPrsc),
 		.oPhase(wPhase),
 		.oUh(oUh),
 		.oUl(oUl),
