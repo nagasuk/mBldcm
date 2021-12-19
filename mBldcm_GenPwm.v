@@ -44,7 +44,7 @@ module mBldcm_GenPwm #(
 	end
 
 	// Generate signal to count up/down
-	assign wSigCntUd = (iPrscSel > 5'd0) ? (wPrsc & ~rPrePrsc) : iClock;
+	assign wSigCntUd = (iPrscSel > 5'd0) ? (wPrsc & ~rPrePrsc) : 1'b1;
 
 	always @(posedge iClock) begin : PrePrescalor
 		if (iReset_n == 1'b0) begin
