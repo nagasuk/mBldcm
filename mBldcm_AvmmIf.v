@@ -1,6 +1,8 @@
 `ifndef M_BLDCM_AVMM_IF_V
 `define M_BLDCM_AVMM_IF_V
 
+`include "mBldcm_Version.v"
+
 `default_nettype none
 
 module mBldcm_AvmmIf (
@@ -102,7 +104,7 @@ module mBldcm_AvmmIf (
 	// [Sub: Control]
 	assign wControl = {4'h00, oPwmMaxCnt, oPwmPrsc, 1'b0, iPhase, 1'b0, oEnable};
 	// [Sub: Status]
-	assign wStatus = {30'h00000000, iFreqReflected, iStop};
+	assign wStatus = {`M_BLDCM_REL_CNT, 22'h000000, iFreqReflected, iStop};
 
 	// Write control
 	// [Freq_target]

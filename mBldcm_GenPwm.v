@@ -1,18 +1,21 @@
 `ifndef M_BLDCM_GENPWM_V
 `define M_BLDCM_GENPWM_V
 
+`include "mBldcm_Arithmetic.v"
+
 `default_nettype none
 
 module mBldcm_GenPwm #(
 	parameter pCounterWidth = 32,
-	parameter pNumPrescaler = 32
+	parameter pNumPrescaler = 32,
+	parameter pPrscSelWidth = `MF_BLDCM_CLOG2(pNumPrescaler + 1)
 ) (
 	input wire iClock,
 	input wire iReset_n,
 
 	input wire [(pCounterWidth-1):0] iMaxCnt,
 	input wire [(pCounterWidth-1):0] iCmpCnt,
-	input wire [5:0]                 iPrscSel,
+	input wire [(pPrscSelWidth-1):0] iPrscSel,
 
 	output wire oHighPwm,
 	output wire oLowPwm
@@ -33,7 +36,9 @@ module mBldcm_GenPwm #(
 	wire wSigOver;       // Signal to indicate that the counter is over max.
 
 	// Prescaler
-	assign wPrsc = (iPrscSel > 5'd0) ? rPrsc[iPrscSel-5'd1] : 1'b0;
+	assign wPrsc = (iPrscSel > {(pPrscSelWidth){1'b0}}) ?
+	               rPrsc[iPrscSel-{{(pPrscSelWidth-1){1'b0}},1'b1}] :
+	               1'b0;
 
 	always @(posedge iClock) begin : Prescaler
 		if (iReset_n == 1'b0) begin
@@ -44,7 +49,9 @@ module mBldcm_GenPwm #(
 	end
 
 	// Generate signal to count up/down
-	assign wSigCntUd = (iPrscSel > 5'd0) ? (wPrsc & ~rPrePrsc) : 1'b1;
+	assign wSigCntUd = (iPrscSel > {(pPrscSelWidth){1'b0}}) ?
+	                   (wPrsc & ~rPrePrsc) :
+	                   1'b1;
 
 	always @(posedge iClock) begin : PrePrescalor
 		if (iReset_n == 1'b0) begin
