@@ -27,7 +27,7 @@ module mBldcm_sim();
 	// test target
 	mBldcm #(
 		.pFreqClock(32'd50000000),
-		.pPwmDeadTimeClockCycle(5),
+		.pDeadTimeClockCycle(5),
 		.pInvertUh(0),
 		.pInvertUl(1),
 		.pInvertVh(0),
@@ -84,6 +84,15 @@ module mBldcm_sim();
 		rRead <= 1'b0;
 		rAddr <= 2'h0;
 		#200
+		// Write PWM compare (FULL)
+		rWrite <= 1'b1;
+		rAddr  <= 2'h1;
+		rWdata <= 32'h00010000;
+		#20
+		rWrite <= 1'b0;
+		rAddr  <= 2'h0;
+		rWdata <= 32'h0;
+		#200
 		// Write phase settings w/o W_PHASE and set enable
 		rWrite <= 1'b1;
 		rAddr  <= 2'h2;
@@ -115,6 +124,15 @@ module mBldcm_sim();
 		#20
 		rRead <= 1'b0;
 		rAddr <= 2'h0;
+		#200
+		// Write PWM compare (reset value)
+		rWrite <= 1'b1;
+		rAddr  <= 2'h1;
+		rWdata <= 32'h00000000;
+		#20
+		rWrite <= 1'b0;
+		rAddr  <= 2'h0;
+		rWdata <= 32'h0;
 		#200
 		// Write freq
 		rWrite <= 1'b1;

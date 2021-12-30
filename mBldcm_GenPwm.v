@@ -14,11 +14,10 @@ module mBldcm_GenPwm #(
 	input wire iReset_n,
 
 	input wire [(pCounterWidth-1):0] iMaxCnt,
-	input wire [(pCounterWidth-1):0] iCmpCnt,
+	input wire [pCounterWidth:0]     iCmpCnt,
 	input wire [(pPrscSelWidth-1):0] iPrscSel,
 
-	output wire oHighPwm,
-	output wire oLowPwm
+	output wire oPwm
 );
 
 	localparam [0:0] pStatCnt_Up   = 1'b0;
@@ -105,8 +104,7 @@ module mBldcm_GenPwm #(
 	end
 
 	// PWM output
-	assign oHighPwm = (iCmpCnt > rCnt) ? 1'b1 : 1'b0;
-	assign oLowPwm  = ~oHighPwm;
+	assign oPwm = (iCmpCnt > {1'b0,rCnt}) ? 1'b1 : 1'b0;
 
 endmodule
 

@@ -4,12 +4,13 @@
 `include "mBldcm_Freq2Div.v"
 `include "mBldcm_AvmmIf.v"
 `include "mBldcm_Core.v"
+`include "mBldcm_Arithmetic.v"
 
 `default_nettype none
 
 module mBldcm #(
 	parameter [31:0] pFreqClock = 32'd50000000,
-	parameter        pPwmDeadTimeClockCycle = 10,
+	parameter [31:0] pDeadTimeClockCycle = 32'd10,
 	parameter [0:0]  pInvertUh = 1'b0,
 	parameter [0:0]  pInvertUl = 1'b0,
 	parameter [0:0]  pInvertVh = 1'b0,
@@ -42,6 +43,7 @@ module mBldcm #(
 	localparam [2:0] pTotalPhaseStages = 3'd6;
 	localparam       pPwmCounterWidth  = 16;
 	localparam       pPwmNumPrescaler  = 32;
+	localparam       pPwmPrscWidth     = `MF_BLDCM_CLOG2(pPwmNumPrescaler + 1);
 
 	// Wire
 	wire        wFreqReflected;
@@ -53,12 +55,15 @@ module mBldcm #(
 	wire [2:0]  wPhase;
 	wire [2:0]  wPhaseUpdate;
 	wire        wLatchPhaseUpdate;
-	wire [17:0] wPwmCmp;
-	wire [16:0] wPwmMaxCnt;
-	wire [6:0]  wPwmPrsc;
+
+	wire [pPwmCounterWidth:0]     wPwmCmp;
+	wire [(pPwmCounterWidth-1):0] wPwmMaxCnt;
+	wire [pPwmPrscWidth:0]        wPwmPrsc;
 
 	// Avalon-MM I/F
-	mBldcm_AvmmIf uBldcm_AvmmIf (
+	mBldcm_AvmmIf #(
+		.pDeadTimeClockCycle(pDeadTimeClockCycle)
+	) uBldcm_AvmmIf (
 		.iClock(iClock),
 		.iReset_n(iReset_n),
 		.iAddr(iAddr),
@@ -99,7 +104,7 @@ module mBldcm #(
 		.pTotalPhaseStages(pTotalPhaseStages),
 		.pPwmCounterWidth(pPwmCounterWidth),
 		.pPwmNumPrescaler(pPwmNumPrescaler),
-		.pPwmDeadTimeClockCycle(pPwmDeadTimeClockCycle),
+		.pDeadTimeClockCycle(pDeadTimeClockCycle),
 		.pInvertUh(pInvertUh),
 		.pInvertUl(pInvertUl),
 		.pInvertVh(pInvertVh),

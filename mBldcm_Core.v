@@ -4,22 +4,21 @@
 `include "mBldcm_PhaseController.v"
 `include "mBldcm_HalfBridgeController.v"
 `include "mBldcm_GenPwm.v"
-`include "mBldcm_OnDelay.v"
 `include "mBldcm_OutputMux.v"
 
 `default_nettype none
 
 module mBldcm_Core #(
-	parameter [2:0] pTotalPhaseStages = 3'd6,
-	parameter       pPwmCounterWidth = 32,
-	parameter       pPwmNumPrescaler = 32,
-	parameter       pPwmDeadTimeClockCycle = 10,
-	parameter [0:0] pInvertUh = 1'b0,
-	parameter [0:0] pInvertUl = 1'b0,
-	parameter [0:0] pInvertVh = 1'b0,
-	parameter [0:0] pInvertVl = 1'b0,
-	parameter [0:0] pInvertWh = 1'b0,
-	parameter [0:0] pInvertWl = 1'b0
+	parameter [2:0]  pTotalPhaseStages = 3'd6,
+	parameter        pPwmCounterWidth = 32,
+	parameter        pPwmNumPrescaler = 32,
+	parameter [31:0] pDeadTimeClockCycle = 32'd10,
+	parameter [0:0]  pInvertUh = 1'b0,
+	parameter [0:0]  pInvertUl = 1'b0,
+	parameter [0:0]  pInvertVh = 1'b0,
+	parameter [0:0]  pInvertVl = 1'b0,
+	parameter [0:0]  pInvertWh = 1'b0,
+	parameter [0:0]  pInvertWl = 1'b0
 ) (
 	// Common
 	input  wire iClock,
@@ -32,7 +31,7 @@ module mBldcm_Core #(
 	input  wire [2:0]                    iPhaseUpdate,
 	input  wire                          iLatchPhaseUpdate,
 	input  wire [(pPwmCounterWidth-1):0] iPwmCtrlMaxCnt,
-	input  wire [(pPwmCounterWidth-1):0] iPwmCtrlCmpCnt,
+	input  wire [pPwmCounterWidth:0]     iPwmCtrlCmpCnt,
 	input  wire [5:0]                    iPwmCtrlPrscSel,
 
 	// Output signals to monitor
@@ -49,8 +48,7 @@ module mBldcm_Core #(
 
 	// Wires
 	wire [2:0]  wPhase;
-	wire        wHighPwm;
-	wire        wLowPwm;
+	wire        wPwm;
 	wire        wHighPwmOnDelayed;
 	wire        wLowPwmOnDelayed;
 	wire        wUhTmp;
@@ -85,55 +83,42 @@ module mBldcm_Core #(
 		.iMaxCnt(iPwmCtrlMaxCnt),
 		.iCmpCnt(iPwmCtrlCmpCnt),
 		.iPrscSel(iPwmCtrlPrscSel),
-		.oHighPwm(wHighPwm),
-		.oLowPwm(wLowPwm)
-	 );
-
-	mBldcm_OnDelay #(
-		.pDelayClockCycle(pPwmDeadTimeClockCycle)
-	) uBldcm_OnDelayHighSidePwm (
-		.iClock(iClock),
-		.iReset_n(iReset_n),
-		.iSig(wHighPwm),
-		.oSig(wHighPwmOnDelayed)
-	);
-
-	mBldcm_OnDelay #(
-		.pDelayClockCycle(pPwmDeadTimeClockCycle)
-	) uBldcm_OnDelayLowSidePwm (
-		.iClock(iClock),
-		.iReset_n(iReset_n),
-		.iSig(wLowPwm),
-		.oSig(wLowPwmOnDelayed)
+		.oPwm(wPwm)
 	);
 
 	// Generate signal to excite motor
 	mBldcm_HalfBridgeController #(
-		.pPhaseDiff(3'd0)
+		.pPhaseDiff(3'd0),
+		.pDeadTimeClockCycle(pDeadTimeClockCycle)
 	) uBldcm_HBCtrl_U (
+		.iClock(iClock),
+		.iReset_n(iReset_n),
 		.iPhase(wPhase),
-		.iHighPwm(wHighPwmOnDelayed),
-		.iLowPwm(wLowPwmOnDelayed),
+		.iPwm(wPwm),
 		.oHighSide(wUhTmp),
 		.oLowSide(wUlTmp)
 	);
 
 	mBldcm_HalfBridgeController #(
-		.pPhaseDiff(3'd2)
+		.pPhaseDiff(3'd2),
+		.pDeadTimeClockCycle(pDeadTimeClockCycle)
 	) uBldcm_HBCtrl_V (
+		.iClock(iClock),
+		.iReset_n(iReset_n),
 		.iPhase(wPhase),
-		.iHighPwm(wHighPwmOnDelayed),
-		.iLowPwm(wLowPwmOnDelayed),
+		.iPwm(wPwm),
 		.oHighSide(wVhTmp),
 		.oLowSide(wVlTmp)
 	);
 
 	mBldcm_HalfBridgeController #(
-		.pPhaseDiff(3'd4)
+		.pPhaseDiff(3'd4),
+		.pDeadTimeClockCycle(pDeadTimeClockCycle)
 	) uBldcm_HBCtrl_W (
+		.iClock(iClock),
+		.iReset_n(iReset_n),
 		.iPhase(wPhase),
-		.iHighPwm(wHighPwmOnDelayed),
-		.iLowPwm(wLowPwmOnDelayed),
+		.iPwm(wPwm),
 		.oHighSide(wWhTmp),
 		.oLowSide(wWlTmp)
 	);

@@ -5,7 +5,9 @@
 
 `default_nettype none
 
-module mBldcm_AvmmIf (
+module mBldcm_AvmmIf #(
+	parameter [31:0] pDeadTimeClockCycle = 32'd10
+) (
 	// Common
 	input wire iClock,
 	input wire iReset_n,
@@ -72,6 +74,9 @@ module mBldcm_AvmmIf (
 	localparam        pPwmMaxCntRegBitPos   = 12;
 	localparam        pPwmMaxCntRegMsb      = 27;
 
+	// [For Status Register]
+	localparam pDTCycRegWidth = 4;
+
 	// Wires
 	wire        wLatchPwmCmpReg;
 	wire [31:0] wStatus;
@@ -104,7 +109,7 @@ module mBldcm_AvmmIf (
 	// [Sub: Control]
 	assign wControl = {4'h00, oPwmMaxCnt, oPwmPrsc, 1'b0, iPhase, 1'b0, oEnable};
 	// [Sub: Status]
-	assign wStatus = {`M_BLDCM_REL_CNT, 22'h000000, iFreqReflected, iStop};
+	assign wStatus = {`M_BLDCM_REL_CNT, pDeadTimeClockCycle[(pDTCycRegWidth-1):0], 18'h000000, iFreqReflected, iStop};
 
 	// Write control
 	// [Freq_target]

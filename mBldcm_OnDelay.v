@@ -7,7 +7,7 @@
 
 // [Main module]
 module mBldcm_OnDelay #(
-	parameter pDelayClockCycle = 10
+	parameter [31:0] pDelayClockCycle = 32'd10
 ) (
 	input wire iClock,
 	input wire iReset_n,
@@ -17,13 +17,13 @@ module mBldcm_OnDelay #(
 );
 
 	generate
-		if (pDelayClockCycle == 0) begin
+		if (pDelayClockCycle == 32'd0) begin
 			mBldcm_OnDelay0Cycle
 			uBldcm_OnDelay0Cycle (
 				.iSig(iSig),
 				.oSig(oSig)
 			);
-		end else if (pDelayClockCycle == 1) begin
+		end else if (pDelayClockCycle == 32'd1) begin
 			mBldcm_OnDelay1Cycle
 			uBldcm_OnDelay1Cycle (
 				.iClock(iClock),
@@ -31,7 +31,7 @@ module mBldcm_OnDelay #(
 				.iSig(iSig),
 				.oSig(oSig)
 			);
-		end else if (pDelayClockCycle >= 2) begin
+		end else if (pDelayClockCycle >= 32'd2) begin
 			mBldcm_OnDelayGE2Cycles #(
 				.pDelayClockCycle(pDelayClockCycle)
 			) uBldcm_OnDelayGE2Cycles (
@@ -80,7 +80,7 @@ endmodule
 
 
 module mBldcm_OnDelayGE2Cycles #(
-	parameter pDelayClockCycle = 10
+	parameter [31:0] pDelayClockCycle = 32'd10
 )(
 	input wire iClock,
 	input wire iReset_n,
@@ -89,10 +89,10 @@ module mBldcm_OnDelayGE2Cycles #(
 	output wire oSig
 );
 
-	localparam pNumStates = 3;
-	localparam pWidthNumStates = `MF_BLDCM_CLOG2(pNumStates + 1);
-	localparam pCountCycle  = pDelayClockCycle - 2;
-	localparam pWidthCntCyc = `MF_BLDCM_CLOG2(pCountCycle + 1);
+	localparam        pNumStates = 3;
+	localparam        pWidthNumStates = `MF_BLDCM_CLOG2(pNumStates + 1);
+	localparam [31:0] pCountCycle  = pDelayClockCycle - 32'd2;
+	localparam        pWidthCntCyc = `MF_BLDCM_CLOG2(pCountCycle + 32'd1);
 
 	localparam [(pWidthNumStates-1):0] pStateOff           = 0;
 	localparam [(pWidthNumStates-1):0] pStateDelayCounting = 1;
@@ -138,7 +138,7 @@ module mBldcm_OnDelayGE2Cycles #(
 	end
 
 	// Delay Counting
-	assign wSigCountExpired = (rCnt >= pCountCycle) ? 1'b1 : 1'b0;
+	assign wSigCountExpired = (rCnt >= pCountCycle[(pWidthCntCyc-1):0]) ? 1'b1 : 1'b0;
 
 	always @(posedge iClock) begin : DelayCount
 		if (iReset_n == 1'b0) begin

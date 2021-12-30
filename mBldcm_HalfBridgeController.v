@@ -1,22 +1,36 @@
 `ifndef M_BLDCM_HALFBRIDGECONTROLLER_V
 `define M_BLDCM_HALFBRIDGECONTROLLER_V
 
+`include "mBldcm_OnDelay.v"
+
 `default_nettype none
 
 module mBldcm_HalfBridgeController #(
-	parameter [2:0] pPhaseDiff = 3'd0 // This parameter should be 0, 2, or 4.
+	parameter [2:0]  pPhaseDiff          = 3'd0, // This parameter should be 0, 2, or 4.
+	parameter [31:0] pDeadTimeClockCycle = 32'd10
 ) (
+	// Common
+	input  wire iClock,
+	input  wire iReset_n,
+
+	// Phase input
 	input  wire [2:0] iPhase,
 
-	input  wire iHighPwm,
-	input  wire iLowPwm,
+	// Pwm input
+	input  wire iPwm,
 
 	output wire oHighSide,
 	output wire oLowSide
 );
+	// Wires
+	wire wHighPwm;
+	wire wLowPwm;
+	wire wHighSide;
+	wire wLowSide;
 
-	// High side output
-	assign oHighSide = fHighSideMux(iPhase, iHighPwm);
+	// High side signal
+	assign wHighPwm = iPwm;
+	assign wHighSide = fHighSideMux(iPhase, wHighPwm);
 
 	function fHighSideMux(
 		input [2:0] phase,
@@ -29,10 +43,11 @@ module mBldcm_HalfBridgeController #(
 		endcase
 	endfunction
 
-	// Low side output
+	// Low side signal
+	assign wLowPwm = ~iPwm;
 	generate
 		if (pPhaseDiff == 3'd0) begin
-			assign oLowSide = fLowSideMux(iPhase, iLowPwm);
+			assign wLowSide = fLowSideMux(iPhase, wLowPwm);
 
 			function fLowSideMux(
 				input [2:0] phase,
@@ -48,7 +63,7 @@ module mBldcm_HalfBridgeController #(
 			endfunction
 
 		end else if (pPhaseDiff == 3'd2) begin
-			assign oLowSide = fLowSideMux(iPhase, iLowPwm);
+			assign wLowSide = fLowSideMux(iPhase, wLowPwm);
 
 			function fLowSideMux(
 				input [2:0] phase,
@@ -64,7 +79,7 @@ module mBldcm_HalfBridgeController #(
 			endfunction
 
 		end else if (pPhaseDiff == 3'd4) begin
-			assign oLowSide = fLowSideMux(iPhase, iLowPwm);
+			assign wLowSide = fLowSideMux(iPhase, wLowPwm);
 
 			function fLowSideMux(
 				input [2:0] phase,
@@ -83,6 +98,26 @@ module mBldcm_HalfBridgeController #(
 			// Generate nothing.
 		end
 	endgenerate
+
+	// Insert dead time
+	mBldcm_OnDelay #(
+		.pDelayClockCycle(pDeadTimeClockCycle)
+	) uBldcm_OnDelayHighSideSignal (
+		.iClock(iClock),
+		.iReset_n(iReset_n),
+		.iSig(wHighSide),
+		.oSig(oHighSide)
+	);
+
+	mBldcm_OnDelay #(
+		.pDelayClockCycle(pDeadTimeClockCycle)
+	) uBldcm_OnDelayLowSideSignal (
+		.iClock(iClock),
+		.iReset_n(iReset_n),
+		.iSig(wLowSide),
+		.oSig(oLowSide)
+	);
+
 endmodule
 
 `default_nettype wire

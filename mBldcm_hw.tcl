@@ -81,13 +81,13 @@ set_parameter_property pFreqClock UNITS None
 set_parameter_property pFreqClock ALLOWED_RANGES -2147483648:2147483647
 set_parameter_property pFreqClock DESCRIPTION ""
 set_parameter_property pFreqClock HDL_PARAMETER true
-add_parameter pPwmDeadTimeClockCycle INTEGER 10
-set_parameter_property pPwmDeadTimeClockCycle DEFAULT_VALUE 10
-set_parameter_property pPwmDeadTimeClockCycle DISPLAY_NAME pPwmDeadTimeClockCycle
-set_parameter_property pPwmDeadTimeClockCycle TYPE INTEGER
-set_parameter_property pPwmDeadTimeClockCycle UNITS None
-set_parameter_property pPwmDeadTimeClockCycle ALLOWED_RANGES -2147483648:2147483647
-set_parameter_property pPwmDeadTimeClockCycle HDL_PARAMETER true
+add_parameter pDeadTimeClockCycle INTEGER 10
+set_parameter_property pDeadTimeClockCycle DEFAULT_VALUE 10
+set_parameter_property pDeadTimeClockCycle DISPLAY_NAME pDeadTimeClockCycle
+set_parameter_property pDeadTimeClockCycle TYPE INTEGER
+set_parameter_property pDeadTimeClockCycle UNITS None
+set_parameter_property pDeadTimeClockCycle ALLOWED_RANGES -2147483648:2147483647
+set_parameter_property pDeadTimeClockCycle HDL_PARAMETER true
 add_parameter pInvertUh BOOLEAN false ""
 set_parameter_property pInvertUh DEFAULT_VALUE false
 set_parameter_property pInvertUh DISPLAY_NAME pInvertUh
@@ -143,8 +143,7 @@ set_parameter_property pInvertWl HDL_PARAMETER true
 # 
 add_display_item "" Common GROUP ""
 add_display_item Common pFreqClock PARAMETER ""
-add_display_item "" PWM GROUP ""
-add_display_item PWM pPwmDeadTimeClockCycle PARAMETER ""
+add_display_item Common pDeadTimeClockCycle PARAMETER ""
 add_display_item "" "Output Signal" GROUP ""
 add_display_item "Output Signal" pInvertUh PARAMETER ""
 add_display_item "Output Signal" pInvertUl PARAMETER ""
